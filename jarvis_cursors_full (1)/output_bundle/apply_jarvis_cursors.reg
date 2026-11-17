@@ -1,0 +1,20 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Control Panel\Cursors]
+"Arrow"="C:\\Jarvis\\cursors\\jarvis_arrow.cur"
+"Help"="C:\\Jarvis\\cursors\\jarvis_help.cur"
+"AppStarting"="C:\\Jarvis\\cursors\\jarvis_appstarting.ani"
+"Wait"="C:\\Jarvis\\cursors\\jarvis_busy.ani"
+"Crosshair"="C:\\Jarvis\\cursors\\jarvis_precision.cur"
+"IBeam"="C:\\Jarvis\\cursors\\jarvis_text.cur"
+"No"="C:\\Jarvis\\cursors\\jarvis_unavailable.cur"
+"SizeNS"="C:\\Jarvis\\cursors\\jarvis_ns.cur"
+"SizeWE"="C:\\Jarvis\\cursors\\jarvis_we.cur"
+"SizeNWSE"="C:\\Jarvis\\cursors\\jarvis_nwse.cur"
+"SizeNESW"="C:\\Jarvis\\cursors\\jarvis_nesw.cur"
+"SizeAll"="C:\\Jarvis\\cursors\\jarvis_move.cur"
+"Hand"="C:\\Jarvis\\cursors\\jarvis_link.cur"
+"UpArrow"="C:\\Jarvis\\cursors\\jarvis_uparrow.cur"
+"Pin"="C:\\Jarvis\\cursors\\jarvis_location.cur"
+"Person"="C:\\Jarvis\\cursors\\jarvis_person.cur"
+"Scheme Source"=dword:00000000
