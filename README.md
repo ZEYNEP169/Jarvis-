@@ -75,8 +75,8 @@ Assistant personnel d'intelligence artificielle à commande vocale pour Windows,
 Windows, Python 3.11
 
 ```bash
-git clone https://github.com/ZEYNEP169/jarvis.git
-cd jarvis
+git clone https://github.com/ZEYNEP169/Jarvis-.git
+cd Jarvis-
 pip install PyQt5 requests psutil numpy pillow opencv-python mediapipe edge-tts gTTS python-vlc SpeechRecognition pyaudio flask flask-socketio mss qrcode ngrok winsdk wmi pyautogui screen-brightness-control
 python jarvis_voice.py
 ```
