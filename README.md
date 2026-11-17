@@ -1,5 +1,15 @@
 # J.A.R.V.I.S.
 
+![JARVIS panel](screenshots/appearance.png)
+
+![Start animation](screenshots/start_animation.png)
+
+![Hand gesture recognition](screenshots/hand-gesture-recognition.png)
+
+![Island](screenshots/island.png)
+
+![Island mascot](screenshots/island_mascot.png)
+
 🇹🇷 [Türkçe](#-türkçe) · 🇬🇧 [English](#-english) · 🇫🇷 [Français](#-français)
 
 ---
