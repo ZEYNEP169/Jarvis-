@@ -83,6 +83,7 @@ NO_SWIPE = ("fist", "thumb_up", "thumb_down", "victory", "point_left", "point_ri
 HOLD_EVENTS = {"open": "play", "fist": "pause", "victory": "screenshot", "three": "describe", "ok": "mute", "rock": "mouse_on"}
 HOLD_COOLDOWN = {"victory": 2.0, "three": 6.0, "ok": 1.0, "rock": 1.5}   # bu seklin tutulurken kaydirma sayilmaz
 PREVIEW_W, PREVIEW_H = 192, 144   # canli kamera penceresindeki goruntu boyutu (kucultmek icin azalt)
+HAND_ONLY_PREVIEW = True   # True: onizlemede YUZUN/ODANIN goruntusu gizlenir, sadece el iskeleti gorunur (video cekerken). False: kamera goruntusu
 LOCK_HOLD = 0.6            # iki yumruk bu kadar sure tutulunca ekran kilitlenir
 LOCK_COOLDOWN = 3.0        # iki kilitleme arasi en az bekleme (sn)
 WAVE_WIN = 1.3             # el sallama: bu sure icindeki yatay hareket incelenir
@@ -115,6 +116,8 @@ MOUSE_PUSH_ON = 0.72       # parmak boyu normalin bu oranina inerse TIK olur (ku
 MOUSE_PUSH_OFF = 0.85      # parmak bu orana geri donunce yeni tik icin hazir
 MOUSE_PUSH_CD = 0.5        # iki itme-tik arasi en az bekleme (sn)
 MOUSE_CLICK_SECOND = True   # True: TIK = diger elini YUMRUK yapmak (yumruk tutarsan surukleme), V = sag tik. Imlec eli hicbir sekilde tiklamaz. False: eski yontem (basparmak-isaret / itme)
+MOUSE_CLOSED_RATIO = 1.12  # tik elinde parmak "kapali" sayilma siniri (buyutursan yumruk daha kolay algilanir)
+MOUSE_RCLICK_HOLD = 0.7    # sag tik icin V isaretini bu kadar sn tut (cok hizli algilamasin)
 MOUSE_CLICK_FRAMES = 3     # tik icin yumrugun bu kadar kare ust uste gorunmesi gerekir (yanlis tiki onler)
 MOUSE_OFF_TWO_HANDS = True # True: fare modu sadece IKI EL ROCK yapinca kapanir (yanlislikla kapanmaz). False: eski tek el yontemi
 MOUSE_OFF_TWO = 1.0        # iki el rock bu kadar sn tutulunca fare modu kapanir
@@ -314,6 +317,19 @@ def palm_center(lm):
             sum(lm[i][1] for i in _PALM) / len(_PALM))
 
 
+def is_closed_hand(lm):
+    """Tik eli icin gevsek yumruk testi: 4 parmak da kapali (isaret parmagi acik olan el = imlec eli, yumruk degil)."""
+    wrist = lm[0]
+    rs = []
+    for tip, pip in zip(_TIPS, _PIPS):
+        dp = _dist(lm[pip], wrist)
+        if dp < 1e-6:
+            return False
+        rs.append(_dist(lm[tip], wrist) / dp)
+    closed = [r < MOUSE_CLOSED_RATIO for r in rs]
+    return all(closed)
+
+
 class GestureEngine:
     """update(t, lm, lm2=None) -> olay listesi. lm / lm2: 21 (x, y) noktasi (0..1, ayna cevrilmis kare) ya da None.
     Olaylar: 'play', 'pause', 'next', 'prev', 'vol_up', 'vol_down', 'screenshot', 'freeze', 'unfreeze'."""
@@ -474,6 +490,7 @@ class GestureEngine:
         self._m_pinch = 0
         self._m_rock = None
         self._m_rock2 = None               # iki el rock sayaci
+        self._m_v = None                   # sag tik V isareti sayaci
         self._m_rock_cd = t + 1.5          # acar acmaz hemen kapanmasin
         self._m_rock_ok = False            # rock pozundan ONCE cikilmadan kapatma hareketi sayilmaz
         self._m_rcd = 0.0
@@ -554,9 +571,14 @@ class GestureEngine:
         click_hand = None
         if MOUSE_CLICK_SECOND:
             # iki el varsa: yumruk olan el TIK elidir, diger el imlec elidir
-            if lm2 is not None and classify(lm) == "fist" and classify(lm2) != "fist":
+            if lm2 is not None and is_closed_hand(lm) and not is_closed_hand(lm2):
                 lm, lm2 = lm2, lm
-            click_hand = classify(lm2) if lm2 is not None else None
+            if lm2 is None:
+                click_hand = None
+            elif is_closed_hand(lm2):
+                click_hand = "fist"
+            else:
+                click_hand = classify(lm2)
 
         size = _dist(lm[0], lm[9])
         if size < 1e-6:
@@ -631,9 +653,15 @@ class GestureEngine:
                 if self.mouse_down:
                     self.mouse_down = False
                     events.append("mouse_up")
-                if click_hand == "victory" and t >= self._m_rcd:
-                    self._m_rcd = t + MOUSE_RCLICK_CD
-                    events.append("mouse_rclick")
+                if click_hand == "victory":
+                    if self._m_v is None:
+                        self._m_v = t
+                    elif t - self._m_v >= MOUSE_RCLICK_HOLD and t >= self._m_rcd:
+                        self._m_rcd = t + MOUSE_RCLICK_CD
+                        self._m_v = None
+                        events.append("mouse_rclick")
+                else:
+                    self._m_v = None
             return events
 
         # sol tik / surukleme
@@ -940,6 +968,8 @@ class GestureController:
         try:
             h, w = frame.shape[:2]
             img = frame.copy()
+            if HAND_ONLY_PREVIEW:
+                img[:] = (14, 10, 6)                      # kamera goruntusunu sil, sadece koyu zemin kalsin
             color = (0, 200, 255) if not engine.frozen else (120, 120, 120)
             for hand in hands:
                 pts = [(int(x * w), int(y * h)) for x, y in hand]
